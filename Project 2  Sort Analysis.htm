@@ -1,0 +1,528 @@
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<META NAME="Generator" CONTENT="gnu emacs">
+<title>Project 2: Sort Analysis</title>
+<style type = "text/css">
+<!-- @import "http://www.cs.fsu.edu/~lacher/styles/RCLstyle1.css"; -->
+</style>
+</HEAD>
+<body link="black" vlink="black" alink="#808080">
+
+<!--
+<center>
+<h1><font color=#990000>
+Under development - not ready for use
+</font></h1>
+</center>
+-->
+
+<!--
+<center>
+<h1><font color=#990000>
+Draft: Open for comment in the Discussion Forum.
+</font></h1>
+</center>
+-->
+
+<center>
+<h1><font color=#990000>
+This document is officially released and open for comment in the discussion forum.
+</font></h1>
+</center>
+
+
+<center>
+<h1>Project 2: Sort Algorithm Optimization</h1>
+</center>
+
+<P>
+<b>Educational Objectives:</b> 
+On successful completion of this assignment, the student should be able to
+<ul>
+<li>
+Implement a variety of comparison sort algorithms as generic algorithms,
+including Insertion Sort, SelectionSort, HeapSort, MergeSort, and QuickSort, 
+re-using code as much as possible from the course library. The implementations
+should cover both default order and order by passed predicate object.
+</li>
+<li>Optimize MergeSort and QuickSort to achieve better performance, given a
+  performance criterion.
+</li>
+<li>Discuss the capabilities and use constraints for each of
+these generic algorithms, including assumptions on assumed iterator type, worst
+and average case runtimes.
+</li>
+<li>Discuss the techniques used for improving performance and the amount of
+  improvement obtained by them.
+</li>
+</ul>
+</p>
+
+<p>
+<strong>Operational Objectives:</strong>
+
+Implement various comparison sorts as generic algorithms, with the minimal
+practical constraints on iterator types. Each generic comparison sort should be
+provided in two froms: (1) default order and (2) order supplied by a predicate
+class template parameter.
+</p>
+<p>
+The sorts to be developed and tested are selection sort, insertion sort, heap
+sort (in several variations), merge sort (both top-down and bottom-up), quick sort (in several variations).
+</p>
+
+<p>
+Develope optimized versions of MergeSort and QuickSort, also as generic algorithms.
+</p>
+
+<p><b>Background Knowledge Required:</b> Be sure that you have mastered the
+material in these chapters before beginning the project:
+
+<a href="http://www.cs.fsu.edu/~lacher/courses/COP4531/lectures/containers1/toc.html" target ="_blank">
+Sequential Containers</a>,
+
+<a href="http://www.cs.fsu.edu/~lacher/courses/REVIEWS/cop4530/funcobj/toc.html" target ="_blank">
+Function Classes and Objects</a>,
+
+<a href="http://www.cs.fsu.edu/~lacher/courses/REVIEWS/cop4530/iterators/toc.html" target ="_blank">
+Iterators</a>,
+
+<a href="http://www.cs.fsu.edu/~lacher/courses/REVIEWS/cop4530/genalg/toc.html" target ="_blank">
+Generic Algorithms</a>,
+
+<a href="http://www.cs.fsu.edu/~lacher/courses/COP4531/lectures/gset/toc.html" target ="_blank">
+Generic Set Algorithms</a>,
+
+<a href="http://www.cs.fsu.edu/~lacher/courses/COP4531/lectures/binary_heaps/toc.html" target ="_blank">
+Heap Algorithms</a>, and
+
+<a href="http://www.cs.fsu.edu/~lacher/courses/COP4531/lectures/sorts/toc.html" target ="_blank">
+Sorting Algorithms</a>
+
+<p><strong>Deliverables:</strong> Two files:
+</P>
+</p><blockquote><pre>
+gsort.h         # contains the generic algorithm implementations of comparison sorts
+report.txt      # report on findings during optimization of algorithms
+</pre></blockquote></p>
+
+</p>
+
+<h2>Procedural Requirements</h2>
+
+<ol type="1">
+
+<li><p>The official
+development, testing, and assessment environment is 
+<tt>g++47 -std=c++11 -Wall -Wextra</tt> on the <tt>linprog</tt> machines. Code should compile without
+error or warning.
+</p></li>
+
+<li><p>
+Develop and fully test all of the sort algorithms listed under requirements
+below. Make certain that your testing includes "boundary" cases, such as empty
+ranges, ranges that have the same element at each location, and ranges that are
+in correct or reverse order before sorting. 
+</p></li>
+
+<li><p>
+Develop and fully test optimized versions of MergeSort and QuickSort, testing
+with the same procedures used for the initial tests.
+</p></li>
+
+<li><p>
+Place all of the generic sort
+algorithms in the file <tt>gsort.h</tt>.
+</p></li>
+
+<li><p>
+Your test data files should have descriptive names
+so that their content can be inferred from the name.</p></li>
+
+<li><p>Turn in <tt>gsort.h</tt> and <tt>report.txt</tt> using the script <tt>LIB/proj2/proj2submit.sh</tt>.
+</p>
+<p>
+<em><b>Warning:</b> Submit scripts do not work on the <tt>program</tt> and
+<tt>linprog</tt> servers. Use <tt>shell.cs.fsu.edu</tt> to submit projects. If you do
+not receive the second confirmation with the contents of your project, there has
+been a malfunction. A listing of these data files should appear as an appendix
+to your report.</em>
+</p>
+</ol>
+
+<h2>Divide-and-Conquer Algorithms</h2>
+
+<p>
+MergeSort [top-down version] is a prototypical divide-and-conquer algorithm,
+dividing a problem (in this case, a sorting problem) into two problems that are
+1/2 as big and constructing a solution from solutions of the
+sub-problems. The two sub-problems are solved by recursive calls.
+</p>
+
+<p>
+This divide-and-conquer technique is very powerful, resulting in both simple
+implementing code and a natural way to reason about the algorithm with
+mathematical induction. 
+</p>
+
+<p>
+The various recursive calls form a binary tree. For example, consider the
+MergeSort algorithm operating on the array
+</p><blockquote><pre>
+[50 30 70 95 10 50 20 60 30 40 50 70 60 90 80 20]
+</pre></blockquote><p>
+The first two recursive calls are <tt>MergeSort(0,8)</tt>
+and <tt>MergeSort(9,15)</tt>. Each of these in turn makes two recursive calls to
+the algorithm on smaller arrays, and so on, until the array size is one, the
+base case of the recursion. The call tree looks like this (showing the arrays,
+but omitting the function name):
+
+</p><blockquote><pre>
+                      <font color="red">[50 30 70 95 10 50 20 60 30 40 50 70 60 90 80 20]</font>
+
+               <font color="red">[50 30 70 95 10 50 20 60]</font>                 [30 40 50 70 60 90 80 20]
+
+          [50 30 70 95]        <font color="red">[10 50 20 60]</font>        [30 40 50 70]        [60 90 80 20]
+
+       [50 30]    [70 95]   <font color="red">[10 50]</font>    [20 60]   [30 40]    [50 70]   [60 90]    [80 20]
+
+      [50] [30]  [70] [95] [10] [50]  [20] [60] [30] [40]  [50] [70] [60] [90]  [80] [20]
+</pre></blockquote><p>
+The dynamic trace of the algorithm running on the input array follows a
+left-to-right DFS path in the call tree (actually a postorder traversal of
+the tree). The call stack contains the path from root to current location,
+exactly like the stack used to implement a post-order binary tree iterator. For
+example, when the recursive call <tt>MergeSort(4,6)</tt> is made, the call stack
+contains the path shown in <font color="red">red</font>.
+</p>
+
+<p>
+Using the binary tree model of the recursive calls, as above, we
+can see that there are many calls made near the bottom of the tree where the
+array sizes are small. (In fact, 1/2 of the calls are made at the leaves of the
+tree!) If we can stop the recursion process several layers up from the leaf
+layer, we can eliminate a huge number of these calls.
+</p>
+<p>
+An optimization that is useful whenever there is a non-recursive solution to the
+problem that runs quickly on very small input is to terminate the recursion at
+small input size and apply the non-recursive alternative instead, thus
+eliminating many recursive calls on small input sizes. For recursive
+divide-and-conquer sort algorithms such
+as MergeSort and QuickSort, using this idea to cut off the recursion and apply
+InsertionSort on small size input can measurably improve
+performance. InsertionSort is a good choice because it is simple and also is
+efficient on ranges that are completely or partially sorted. On the other hand,
+InsertionSort has worst-case runtime &Omega;(<i>n</i><sup>2</sup>), so we
+certainly do not want to run it on large ranges. The "cutoff" size is typically
+optimal somewhere between 4 and 16.
+</p>
+
+<h2>Improving Performance of MergeSort</h2>
+
+<p>In addition to applying the "cutoff" to InsertSort for small range sizes,
+  MergeSort can be improved by (1) eliminating the merge operation when the two
+  ranges are already in order, and (2) handling memory more efficiently. 
+</p>
+
+<p>Re (1): Notice that when the two recursive calls to sort subranges return, if the
+largest element in the left subrange is no larger than the smallest element in
+the right subrange, the entire range is already sorted without a call to the
+merge operation. This condition is easily detected by comparing the two elements
+in question, and the resulting non-call to the merge operation saves on the
+order of end - beg comparisons. 
+</p>
+
+<p>Re (2): It is difficult
+  (and costly) to eliminate the need for extra space - required as the temporary
+  destination/target for the merge operation. But as stated in its pure form,
+  this destination memory is stack-allocated whenever the call to the merge
+  operation is made, making the subsequent copy of data back into the original
+  range unavoidable. Both the stack allocation and the subsequent data copy can
+  be eliminated, resulting in a more efficient and faster implementation of the
+  algorithm. 
+</p>
+
+<p>The stack allocation of data memory is eliminated by declaring space
+  statically in the MergeSort body directly, and using that space as a target
+  for the data merge operation. The subsequent data copy is eliminated by
+  applying the next algorithm call to the data space and merging back into the
+  original range. Thus the calls to merge alternate targets - on odd calls
+  merging from the original range into the data store and on even calls merging
+  from the data store back to the original range. At the end of the algorithm,
+  if the total number of merges is odd, then a one-time data copy is made to get
+  the sorted data back into its original location. A change in the organization
+  of the code will be necessary.
+</p>
+
+<p>This last idea to avoid most
+  of the data copy calls is a tricky optimization to implement, and extra credit
+  will be awarded for successfully accomplishing this improvement to MergeSort.
+</p>
+
+<h2>Improving Performance of QuickSort</h2>
+
+<p>In addition to applying the "cutoff" to InsertSort for small range sizes,
+  QuickSort can be improved in two ways. The first is to avoid the
+  &Omega;(<i>n</i><sup>2</sup>) worst case runtime by eliminating the case of
+  pre-sorted input: either randomize the input range in advance, or use a random
+  selector for the pivot index during the run of the algorithm. The second
+  improvement is really a change of the basic algorithm to "3-way QuickSort"
+  (but keeping the concept).
+</p>
+
+<h2>Three-way QuickSort</h2>
+
+<p>
+As we know, pre-sorted data, where there is no actual change required for the
+data, produces the worst case runtime for QuickSort. A related situation occurs
+with data that contains many duplicate entries: the vanilla QuickSort algorithm
+will sometimes require one recursive call for each one of the repeated
+values. An elegant improvement for the algorithm to handle the case of highly
+redundant data uses the idea of 3-way partitioning, wherein all of the elements
+that are equal to the partition value are moved to a contiguous portion of the
+range, after which the entire portion may be omitted from further consideration:
+</p><blockquote><pre>
+Before partitioning: [50 30 70 95 10 50 20 60 30 40 50 70 60 90 80 20]
+                      ^^
+                      parition element
+                     
+ After partitioning: [30 10 20 30 20 30 40 20 50 50 50 70 95 70 90 80]
+                                              ^^^^^^^^
+                                              partition value range [8,11)
+
+ 3 ranges:           [<font color="red">30 10 20 30 20 30 40 20</font> <font color="green">50 50 50</font> <font color="red">70 95 70 90 80</font>]
+
+ Only the two <font color="red">red</font> ranges need to be sorted:
+ Recursive calls:    QuickSort (0,8); QuickSort (11,15);
+</pre></blockquote><p>
+At this point, because the result is a range of indices, it is more convenient
+to subsume the partitioning code into the main algorithm. For an array, the code
+would look like this, with the partitioning code embodied in the while loop:
+</p><blockquote><pre>
+void g_quick_sort_3w (T* beg, T* end)
+{
+  ...
+  T* low = beg;
+  T* hih = end;
+  T v = *beg;
+  T* i = beg;
+  while (i != hih)
+  {
+    if (*i < v) Swap(*low++, *i++);
+    else if (*i > v) Swap(*i, *--hih);
+    else ++i;
+  }
+  g_quick_sort_3w(beg, low);
+  g_quick_sort_3w(hih, end); 
+}
+</pre></blockquote><p>
+(This very sleek code by Robert Sedgewick goes back to the discovery of 3-way
+QuickSort.) The while loop takes one of 3 actions for each i:
+</p><ul>
+<li>if (*i < v) : swap *low and *i; increment both low and i</li>
+
+<li>if (*i > v) : decrement hih; swap *hih and *i
+</li>
+<li>if (*i == v) : increment i
+</li>
+</ul>
+
+<p>Note that in all three cases, the distance between i and hih is made smaller,
+  so the loop terminates after <i>n</i> = <tt>end - beg</tt> iterations. 
+  On termination of the while loop, the range [low,hih) consists entirely of
+  elements equal to v, all elements with index < low have value less than v,
+  and all elements with index >= hih have value greater than v. Thus the range
+  [low,hih) is constant and we need only sort the range [beg,low) to its left and
+  the range [hih,end) to its right.
+</p>
+
+<h2>Code Requirements and Specifications</h2>
+
+<ol type="1">
+
+<li><p>
+The following is a list of the generic algorithms that should be implemented
+in <tt>gsort.h</tt>:
+</p><blockquote><pre>
+g_selection_sort    # version in class notes
+g_insertion_sort    # already implemented in gsort_stub.h
+g_merge_sort        # the pure top-down version from the class notes
+g_merge_sort_bu     # the bottom-up version from the class notes
+g_merge_sort_opt    # the top-down version with "cutoff" and conditional calls to merge
+g_quick_sort        # the pure version from the class notes and Cormen
+g_quick_sort_opt    # the same as above, with "cutoff" for small ranges
+g_quick_sort_3w     # 3-way QuickSort
+g_quick_sort_3w_opt # 3-way QuickSort, with "cutoff" for small ranges
+</pre></blockquote><p>
+
+Note that the following are implemented and distributed elsewhere in the course library:
+
+</p><blockquote><pre>
+List::Sort          # tcpp/list.h, list.cpp
+alt::g_heap_sort    # tcpp/gheap_advanced.h
+fsu::g_heap_sort    # tcpp/gheap_advanced.h
+cormen::g_heap_sort # tcpp/gheap_cormen.h
+</pre></blockquote><p>
+
+
+</p></li>
+<li><p>The sort algorithm file <tt>gsort.h</tt> is expected to operate using the supplied
+test harnesses: <tt>fgsort.cpp</tt> and <tt>sortspy.cpp</tt>. Note that this means, among other
+things, that all generic sorts in <tt>gsort.h</tt> should work with ordinary arrays as well as
+iterators of the appropriate category.
+</p></li>
+
+<li><p>All the sorts, including optimized versions, should be implemented as generic algorithms with
+template parameters that are iterator types.</p></li>
+
+<li><p>Each sort should have two versions, one that uses default
+order (operator <tt>&lt;</tt> on <tt>I::ValueType</tt>) and one that uses a
+predicate object whose type is an extra template parameter.</p></li>
+
+<li><p>All the sorts should be in <tt>namespace fsu</tt>.</p></li>
+
+<li><p>Some of the sorts will require specializations (for both the
+default and predicate versions) to handle the case of arrays and pointers, for
+which <tt>I::ValueType</tt> is not defined. (See <tt>g_insertion_sort</tt>.)
+</p></li>
+
+<li><p>Re-use as many components as possible, especially existing generic
+algorithms such as <tt>g_copy</tt> (in <tt>genalg.h</tt>), <tt>g_set_merge</tt> (in
+<tt>gset.h</tt>), and the generic heap algorithms (in <tt>gheap.h</tt>).
+</p></li>
+
+<li><p>Note that we are <i>not</i> implementing the random initialization
+    optimization for any of the versions of <tt>g_quick_sort</tt>. The effect of
+    that optimization should be mentioned in the report, but its effect is well
+    understood from theory, and using it tends to obscure drawing conclusions
+    from the other advances. 
+</p></li>
+
+</ol>
+
+
+<h2>Report Guidelines</h2>
+
+<ol>
+
+<li><p>
+Your report should address the main points you are investigating, which should include:
+</p>
+<ol type="i">
+<li>Specific optimizations made</li>
+<li>How any optional constants, such as the "cutoff" size, were chosen, and
+  why. (This is a good place for some experimentation.)</li>
+<li>What gains are made by the optimizations - preferable broken down by data
+  characteristics (such as "random", "almost sorted", "few unique keys").</li>
+</ol>
+
+
+<li><p>Your report should be structured something like the following
+outline. You are free to change the titles, organization, and section numbering
+scheme. This is an informal report, which is why you are submitting a text file
+    (as opposed to a pdf document). 
+
+<ol type="1">
+
+ <li><strong>Title: Improving Performance of MergeSort and QuickSort</strong></li>
+
+ <li><strong>Abstract or Executive Summary</strong><br>
+ [brief, logical, concise overview of what the report is about and what its
+ results and conclusions/recommendations are; this is for the Admiral or online
+ library]</li>
+
+ <li><strong>Introduction</strong><br>
+ [A narrative overview "story" of what the paper is about: what, why, how, and
+ conclusions, including how the paper is organized]</li>
+
+ <li><strong>Background</strong><br>
+ [what knowledge underpins the paper, such as theory and the known
+ runtime and runspace characteristics of the (pure, un-optmized) sorts, with references]
+</li>
+
+ <li><strong>Data Analysis Process or Procedure</strong><br>
+ [details on what data decisions are made and why; how input data is created;
+ how timing data is collected; and how analysis is accomplished, including
+ references for any software packages that are used and detailed documentation
+ on any software used]</li>
+
+ <li><strong>Analysis Results</strong><br>
+[State and possibly elaborate your conclusions]
+</li>
+
+<li><strong>Recommendations</strong><br>
+ [Give a summary of your recommendations for best practice use of the various
+ generic sorts.]</li>
+
+<li><strong>Appendix 1</strong><br>Give tables of collected data [time in
+  particular] used to back up
+  your conclusions.
+</li>
+
+<li><strong>Appendix 2</strong><br>Give detailed descriptions of all input
+files, including how they were built, there size, and constraints on
+content. (Do not put the actual input files in the report.)
+</ol>
+
+</p></li>
+
+</ol>
+
+
+
+<h2>Hints</h2>
+
+<ul>
+<li><p><tt>g_heap_sort</tt> is already done and distributed in
+<tt>LIB/tcpp/</tt>. There are three slightly different heap sort
+algorithms implemented: <tt>alt::g_heap_sort</tt>, which is discussed in the
+lecture notes; <tt>fsu::g_heap_sort</tt>, which uses a faster O(<i>n</i>) "make heap"
+algorithm; and <tt>cormen::g_heap_sort</tt>, which is the version discussed in
+the Cormen text. At some point before midterm exams, you should understand the
+distinctions among the three. 
+</p></li>
+
+<li><p>Similarly, <tt>g_insertion_sort</tt> is fully implemented in
+<tt>gsort_stub.h</tt>.
+The prototypes for the default and predicate versions 
+should be useful as models for the other generic comparison sorts. Note this is
+an example where a specialization is required for arrays because of the need for
+<tt>ValueType</tt> in the generic versions.
+</p></li>
+
+
+<li><p> TAKE NOTES! Use either an engineers lab book or (thoughtfully named) text files to keep
+careful notes on what you do and what the results are. Date your entries. This
+will be of immense assistance when you are preparing your report. In real life,
+these could be whipped out when that argumentative know-it-all starts to
+question the validity of your report.
+</p></li>
+
+<li><p>Several code files that support data collection are provided:
+</p><pre>
+sortspy.cpp        # computes comp_count and timing data for generic comparison sorts
+ranuint.cpp        # generates file of randum unsigned integers
+</pre><p>
+A good data file nomenclature uses a base file name, such as "ran" or "dupes"
+that you can set for a series of data files. The suffix is the count of items in
+the file. 
+</p></li>
+
+<li><p>Your file naming system should reflect the nature of the contents of the
+data files. For example, "ran" could be the base name for a series of data files
+with unconstrained random data. Then "ran.1 ran.10, ran.100, ran.1000, ..., ran.1000000" would
+be a series of data files of sizes 1, 10, 100, 1000, ... , 1000000.</tt>.
+</p></li>
+
+<li><p>Be sure that your timing data collection plan uses file naming
+conventions that are compatible with your data file names. You can use a simple
+    listing of file names to indicated the data you use in your investigations.
+</p></li>
+</ul>
+
+
+</body>
+</html>
+
